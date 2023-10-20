@@ -1,7 +1,7 @@
-# cali_wind_siting
+# California wind siting
 Offshore wind siting analysis for California federal water
 
-## Points of contact
+### Points of contact
 * **Project Lead:** [Jessica Carlton](mailto:jessica.carlton@noaa.gov)
 
 ### **Repository Structure**
