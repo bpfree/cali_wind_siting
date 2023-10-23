@@ -3,6 +3,7 @@ Offshore wind siting analysis for California federal water
 
 ### Points of contact
 * **Project Lead:** [Jessica Carlton](mailto:jessica.carlton@noaa.gov)
+* **Data Manager:** [Bryce O'brien](mailto:bryce.obrien)
 
 ### **Repository Structure**
 
