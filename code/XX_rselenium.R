@@ -7,6 +7,7 @@ rm(list = ls())
 # Packages
 library(RSelenium)
 library(tidyverse)
+library(httr)
 
 # Directories
 outputdir <- "data/zz_miscellaneous"
@@ -33,8 +34,7 @@ rD <- rsDriver(browser="firefox",
                version = "latest",
                chromever = NULL,
                geckover = "latest",
-               verbose = T,
-               extraCapabilities = fprof)
+               verbose = T)
 
 remDr <- rD[["client"]]
 remDr$open(silent=T)
@@ -52,19 +52,17 @@ advanced_search <-remDr$findElement(using = "link text",
 advanced_search$clickElement()
 
 remDr$maxWindowSize()
-Sys.sleep(15)
+Sys.sleep(20)
 
 
 check_url <- advanced_search$getCurrentUrl()
 check_url
 
 source <- remDr$getPageSource()[[1]]
-source
-
-
 
 # Choose the states
-
+webElem <- remDr$findElements("css", "iframe")
+remDr$switchToFrame(webElem[[1]])
 
 
 state <-remDr$findElement(using = "name",
@@ -125,7 +123,7 @@ table_clean <- rvest::read_html(source) %>%
   tidyr::separate(longitude,
                   into = c("lon_d", "lon_m", "lon_s"),
                   sep = " ",
-                  remove = F,
+                  remove = T,
                   convert = T) %>%
   # remove any sites without longitude and latitude data
   na.omit() %>%
@@ -139,6 +137,13 @@ table_clean <- rvest::read_html(source) %>%
   dplyr::mutate(lon_dd = -1 * (-1 * lon_d + lon_m /60 + lon_s/60^2),
                 lat_dd = lat_d + lat_m /60 + lat_s/60^2) %>%
   # select fields of interest
+  dplyr::select(state,
+                nexrad_sitename,
+                site_id,
+                agency,
+                equip,
+                lon_dd,
+                lat_dd) %>%
   # convert to simple feature
   sf::st_as_sf(coords = c("lon_dd", "lat_dd"),
                # set the coordinate reference system to WGS84
@@ -146,6 +151,7 @@ table_clean <- rvest::read_html(source) %>%
   # reproject the coordinate reference system to match study area data (EPSG:5070)
   sf::st_transform("EPSG:5070") # EPSG 5070 (https://epsg.io/5070)
 
-
 remDr$close()
 rD$server$stop()
+
+
