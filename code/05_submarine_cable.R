@@ -51,15 +51,15 @@ sessionInfo()
 submarine_cable_dir <- "data/a_raw_data/SubmarineCable/NOAAChartedSubmarineCables.gdb"
 submarine_cable_area_dir <- "data/a_raw_data/SubmarineCableArea/SubmarineCableArea.gpkg"
 
-study_area_gpkg <- "data/b_intermediate_data/oregon_study_area.gpkg"
-wind_area_gpkg <- "data/b_intermediate_data/oregon_wind_area.gpkg"
+study_area_gpkg <- "data/b_intermediate_data/california_study_area.gpkg"
+# wind_area_gpkg <- "data/b_intermediate_data/california_wind_area.gpkg"
 
 ### Output directories
 #### Analysis directories
-industry_operations_submodel <- "data/c_submodel_data/oregon_industry_operations_submodel.gpkg"
+industry_operations_submodel <- "data/c_submodel_data/california_industry_operations_submodel.gpkg"
 
 #### Intermediate directories
-submarine_cable_gpkg <- "data/b_intermediate_data/oregon_submarine_cable.gpkg"
+submarine_cable_gpkg <- "data/b_intermediate_data/california_submarine_cable.gpkg"
 
 #####################################
 #####################################
@@ -95,15 +95,15 @@ date <- format(Sys.time(), "%Y%m%d")
 #####################################
 
 # Load data
-## Oregon call areas
-oregon_call_areas <- sf::st_read(dsn = wind_area_gpkg,
+## California call areas
+california_call_areas <- sf::st_read(dsn = wind_area_gpkg,
                                  layer = paste(sf::st_layers(dsn = wind_area_gpkg,
                                                              do_count = TRUE)))
 
-## Oregon hex areas (original data)
-oregon_hex <- sf::st_read(dsn = study_area_gpkg,
-                          layer = paste(sf::st_layers(dsn = study_area_gpkg,
-                                                      do_count = TRUE)[[1]][4]))
+## California hex areas (original data)
+# california_hex <- sf::st_read(dsn = study_area_gpkg,
+#                               layer = paste(sf::st_layers(dsn = study_area_gpkg,
+#                                                           do_count = TRUE)[[1]][4]))
 
 #####################################
 
@@ -128,11 +128,11 @@ submarine_cables_noaa <- submarine_cables_noaa %>%
 #####################################
 #####################################
 
-# Submarine cables in Oregon call areas
-oregon_submarine_cables <- submarine_cables_noaa %>%
+# Submarine cables in California call areas
+california_submarine_cables <- submarine_cables_noaa %>%
   # obtain only submarine cables in the study area
   rmapshaper::ms_clip(target = .,
-                      clip = oregon_call_areas) %>%
+                      clip = cregon_call_areas) %>%
   # create field called "layer" and fill with "submarine cables" for summary
   dplyr::mutate(layer = "submarine cables")
   
@@ -140,7 +140,7 @@ oregon_submarine_cables <- submarine_cables_noaa %>%
 
 # Add setback distances
 ## 500-meter setback
-oregon_submarine_cable500 <- oregon_submarine_cables %>%
+california_submarine_cable500 <- california_submarine_cables %>%
   #  add a setback (buffer) distance of 500 meters
   sf::st_buffer(dist = 500) %>%
   # group all features by the "layer"
@@ -149,11 +149,11 @@ oregon_submarine_cable500 <- oregon_submarine_cables %>%
   dplyr::summarise()
 
 ## 1000-meter setback (501 - 1000m setback)
-oregon_submarine_cable1000 <- oregon_submarine_cables %>%
+california_submarine_cable1000 <- california_submarine_cables %>%
   #  add a setback (buffer) distance of 1000 meters
   sf::st_buffer(dist = 1000) %>%
   # remove areas between 0 - 500 meters
-  rmapshaper::ms_erase(oregon_submarine_cable500) %>%
+  rmapshaper::ms_erase(california_submarine_cable500) %>%
   # group all features by the "layer"
   dplyr::group_by(layer) %>%
   # summarise data to obtain single feature
@@ -162,17 +162,17 @@ oregon_submarine_cable1000 <- oregon_submarine_cables %>%
 #####################################
 #####################################
 
-# Oregon hex
+# California hex
 ## Submarine Cable with 500-meter setback
-oregon_hex_submarine_cable500 <- oregon_hex[oregon_submarine_cable500, ] %>%
+california_hex_submarine_cable500 <- california_hex[california_submarine_cable500, ] %>%
   sf::st_join(x = .,
-              y = oregon_submarine_cable500,
+              y = california_submarine_cable500,
               join = st_intersects)
 
 ## Submarine Cable with 501-1000-meter setback
-oregon_hex_submarine_cable1000 <- oregon_hex[oregon_submarine_cable1000, ] %>%
+california_hex_submarine_cable1000 <- california_hex[california_submarine_cable1000, ] %>%
   sf::st_join(x = .,
-              y = oregon_submarine_cable1000,
+              y = california_submarine_cable1000,
               join = st_intersects)
 
 
@@ -181,17 +181,17 @@ oregon_hex_submarine_cable1000 <- oregon_hex[oregon_submarine_cable1000, ] %>%
 
 # Export data
 ## Submodel geopackage
-sf::st_write(obj = oregon_hex_submarine_cable500, dsn = industry_operations_submodel, layer = paste0(region, "_hex_", layer_500), append = F)
-sf::st_write(obj = oregon_hex_submarine_cable1000, dsn = industry_operations_submodel, layer = paste0(region, "_hex_", layer_1000), append = F)
+sf::st_write(obj = california_hex_submarine_cable500, dsn = industry_operations_submodel, layer = paste0(region, "_hex_", layer_500), append = F)
+sf::st_write(obj = california_hex_submarine_cable1000, dsn = industry_operations_submodel, layer = paste0(region, "_hex_", layer_1000), append = F)
 
 ## Submarine Cable geopackage
-sf::st_write(obj = oregon_hex_submarine_cable500, dsn = submarine_cable_gpkg, layer = paste0(region, "_hex_", layer_500), append = F)
-sf::st_write(obj = oregon_hex_submarine_cable1000, dsn = submarine_cable_gpkg, layer = paste0(region, "_hex_", layer_1000), append = F)
+sf::st_write(obj = california_hex_submarine_cable500, dsn = submarine_cable_gpkg, layer = paste0(region, "_hex_", layer_500), append = F)
+sf::st_write(obj = california_hex_submarine_cable1000, dsn = submarine_cable_gpkg, layer = paste0(region, "_hex_", layer_1000), append = F)
 
 sf::st_write(obj = submarine_cables_noaa, dsn = submarine_cable_gpkg, layer = "noaa_submarine_cable", append = F)
-sf::st_write(obj = oregon_submarine_cables, dsn = submarine_cable_gpkg, layer = "oregon_submarine_cables", append = F)
-sf::st_write(obj = oregon_submarine_cable500, dsn = submarine_cable_gpkg, layer = "oregon_submarine_cable500", append = F)
-sf::st_write(obj = oregon_submarine_cable1000, dsn = submarine_cable_gpkg, layer = "oregon_submarine_cable1000", append = F)
+sf::st_write(obj = california_submarine_cables, dsn = submarine_cable_gpkg, layer = paste(region, submarine_cables, sep = "_"), append = F)
+sf::st_write(obj = california_submarine_cable500, dsn = submarine_cable_gpkg, layer = paste(region, layer_500, sep = "_"), append = F)
+sf::st_write(obj = california_submarine_cable1000, dsn = submarine_cable_gpkg, layer = paste(region, layer_1000, sep = "_"), append = F)
 
 #####################################
 #####################################
