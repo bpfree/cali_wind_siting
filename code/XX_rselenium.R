@@ -103,6 +103,7 @@ zoom_firefox <- function(client, percent){
 
 # Webscrape set-up
 ## Process uses RSelenium package (learn more about basics here: https://cran.r-project.org/web/packages/RSelenium/vignettes/basics.html)
+### Another helpful tutorial: https://joshuamccrain.com/tutorials/web_scraping_R_selenium.html
 ### Firefox profile (based on this link: https://yizeng.me/2014/05/23/download-pdf-files-automatically-in-firefox-using-selenium-webdriver/)
 fprof <- RSelenium::makeFirefoxProfile(list(
   # detail level for download (0 = Desktop, 1 = systems default downloads location, 2 = custom folder.)
