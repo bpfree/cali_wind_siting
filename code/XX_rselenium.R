@@ -193,11 +193,16 @@ for(i in 1:length(states)){
   # scroll <- remDr$findElement("css", "body")
   # scroll$sendKeysToElement(list(key = "home"))
   
-  # Choose the states
+  #####################################
+  
+  # Define web elements as an iframe so other elements can get selected
   webElem <- remDr$findElements("css", "iframe")
+  ## Make the iframe the location to find the other elements
   remDr$switchToFrame(webElem[[1]])
   
+  #####################################
   
+  # Choose the states
   state <-remDr$findElement(using = "name",
                             value = "lstState")
   state$sendKeysToElement(list(states[i],
@@ -228,11 +233,14 @@ for(i in 1:length(states)){
   longitude$clickElement()
   Sys.sleep(2)
   
+  #####################################
   
   # Get search results
   search <- remDr$findElement(using = "name",
                               value = "Submit")
   search$clickElement()
+  
+  #####################################
   
   # Extract table
   table <- remDr$findElement(using = "xpath",
@@ -242,13 +250,19 @@ for(i in 1:length(states)){
   
   source <- remDr$getPageSource()[[1]]
   
+  #####################################
   
+  # Make table from the results of the search
+  ## Read HTML page to create the table
   table_clean <- rvest::read_html(source) %>%
     # obtain the table
     rvest::html_element(css = "table") %>%
     # read the table to get it as a data frame
     rvest::html_table() %>%
+    
+    # set as a data frame
     as.data.frame() %>%
+    
     # clean data table
     ## make first row the names
     janitor::row_to_names(row_number = 1) %>%
@@ -273,6 +287,7 @@ for(i in 1:length(states)){
     # make longitude and latitude values numeric to calculate decimal degrees
     dplyr::mutate_at(c("lat_d", "lon_d"),
                      as.numeric) %>%
+    
     # convert to longitude and latitude into decimal degrees (degrees + minutes / 60 + seconds / (60 * 60))
     # ***Note: longitude values are multiplied by -1 as they are in the west of the Prime Meridian
     dplyr::mutate(lon_dd = -1 * (-1 * lon_d + lon_m /60 + lon_s/60^2),
@@ -285,6 +300,7 @@ for(i in 1:length(states)){
                   equip,
                   lon_dd,
                   lat_dd) %>%
+    
     # convert to simple feature
     sf::st_as_sf(coords = c("lon_dd", "lat_dd"),
                  # set the coordinate reference system to WGS84
