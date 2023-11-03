@@ -1,18 +1,61 @@
-# Clear workspace
+########################
+### 1. Download Data ###
+########################
+
+# Clear environment
 rm(list = ls())
 
-# Setup
-################################################################################
+# Calculate start time of code (determine how long it takes to complete all code)
+start <- Sys.time()
 
-# Packages
-library(RSelenium)
-library(tidyverse)
-# library(httr)
+#####################################
+#####################################
 
-# Directories
-outputdir <- "data/zz_miscellaneous"
+# Load packages
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(docxtractr,
+               dplyr,
+               elsa,
+               fasterize,
+               fs,
+               ggplot2,
+               janitor,
+               ncf,
+               paletteer,
+               pdftools,
+               plyr,
+               purrr,
+               raster,
+               RColorBrewer,
+               reshape2,
+               rgdal,
+               rgeoda,
+               rgeos,
+               rmapshaper,
+               rnaturalearth, # use devtools::install_github("ropenscilabs/rnaturalearth") if packages does not install properly
+               RSelenium,
+               sf,
+               sp,
+               stringr,
+               terra, # is replacing the raster package
+               tidyr,
+               tidyverse)
 
-# States
+#####################################
+#####################################
+
+# Set directories
+## output directory
+outputdir <- "data/a_raw_data"
+
+## NEXRAD geopackage
+nexrad_gpkg <- "data/a_raw_data/nexrad_sites.gpkg"
+
+#####################################
+#####################################
+
+# Coastal states and regions
+## All US coastal states and some other areas of interest (e.g., Guam, Korea, etc.)
 states <- c("Alabama",
             "Alaska",
             #"Azores", # nothing returned
@@ -41,28 +84,67 @@ states <- c("Alabama",
             "Virginia",
             "Washington")
 
-# Firefox profile
-# Based on this link: https://yizeng.me/2014/05/23/download-pdf-files-automatically-in-firefox-using-selenium-webdriver/
+#####################################
+
+# Zoom out Firefox (taken from here: https://stackoverflow.com/questions/60139836/zoom-out-of-website-when-using-rselenium-without-changing-page-size-resolution)
+## This allows for all elements to be shown on the page
+zoom_firefox <- function(client, percent){
+  store_page <- client$getCurrentUrl()[[1]]
+  client$navigate("about:preferences")
+  webElem <- client$findElement("css", "#defaultZoom")
+  webElem$clickElement()
+  webElem$sendKeysToElement(list(as.character(percent)))
+  webElem$sendKeysToElement(list(key = "return"))
+  client$navigate(store_page)
+}
+
+#####################################
+#####################################
+
+# Webscrape set-up
+## Process uses RSelenium package (learn more about basics here: https://cran.r-project.org/web/packages/RSelenium/vignettes/basics.html)
+### Firefox profile (based on this link: https://yizeng.me/2014/05/23/download-pdf-files-automatically-in-firefox-using-selenium-webdriver/)
 fprof <- RSelenium::makeFirefoxProfile(list(
+  # detail level for download (0 = Desktop, 1 = systems default downloads location, 2 = custom folder.)
   browser.download.folderList = 2L,
+  # location for data download
   browser.download.dir = outputdir,
+  # stores a comma-separated list of MIME types to save to disk without asking what to use to open the file
   browser.helperApps.neverAsk.saveToDisk = "application/pdf",
+  # disable PDF javascript so that PDFs are not displayed
   pdfjs.disabled = TRUE,
+  # turn off scan and loading of any additionally added plug-ins
   plugin.scan.plid.all = FALSE,
+  # high number defined for version of Adobe Acrobat
   plugin.scan.Acrobat = "99.0"))
 
+#####################################
+
 # Launch RSelenium server and driver
-rD <- rsDriver(browser="firefox",
-               version = "latest",
-               chromever = NULL,
-               geckover = "latest",
-               verbose = T,
-               extraCapabilities = fprof)
+rD <- RSelenium::rsDriver(browser="firefox",
+                          # set which version of browser
+                          version = "latest",
+                          # Chrome version (turn off as Firefox will be used)
+                          chromever = NULL,
+                          # set which version of Gecko to use
+                          geckover = "latest",
+                          # status messages
+                          verbose = TRUE,
+                          # populate with the Firefox profile
+                          extraCapabilities = fprof)
 
-
+## Remote driver
 remDr <- rD[["client"]]
-remDr$open(silent=T)
+remDr$open(silent = TRUE)
 
+## Set client (to be used in the )
+client <- rD$client
+
+#####################################
+#####################################
+
+# Obtain NEXRAD sites
+## create reference table
 nexrad_table <- data.frame(state = character(),
                            nexrad_sitename = character(),
                            site_id = character(),
@@ -71,8 +153,14 @@ nexrad_table <- data.frame(state = character(),
                            lon_dd = numeric(),
                            lat_dd = numeric())
 
+#####################################
+
+# Loop that navigates to NEXRAD page (source: https://www.roc.noaa.gov/WSR88D/Program/SiteID.aspx)
+# and scrapes the site data for the states and regions of interest
+
 #i <- 3
-for(i in 1:2){
+for(i in 1:length(states)){
+  start2 <- Sys.time()
   
   # Base URL
   base_url <- "https://www.roc.noaa.gov/WSR88D/Program/SiteID.aspx"
@@ -80,19 +168,30 @@ for(i in 1:2){
   # Navigate to page
   remDr$navigate(base_url)
   
+  #####################################
+  
+  # Prepare window
+  remDr$maxWindowSize()
+  ## Zoom to 80%
+  zoom_firefox(client, 80)
+  
+  #####################################
+  
   # Click "Advanced Search" to search by state
   advanced_search <-remDr$findElement(using = "link text",
                                       value = "Advanced Search")
   advanced_search$clickElement()
-  
-  # remDr$maxWindowSize()
-  # Sys.sleep(20)
+  Sys.sleep(10)
   # 
   # 
   # check_url <- advanced_search$getCurrentUrl()
   # check_url
   
   # source <- remDr$getPageSource()[[1]]
+  
+  # scroll down to see lower fields
+  # scroll <- remDr$findElement("css", "body")
+  # scroll$sendKeysToElement(list(key = "home"))
   
   # Choose the states
   webElem <- remDr$findElements("css", "iframe")
@@ -103,13 +202,15 @@ for(i in 1:2){
                             value = "lstState")
   state$sendKeysToElement(list(states[i],
                                key = "enter"))
-  Sys.sleep(10)
+  Sys.sleep(8)
+  
+  
   
   # Select pertinent data fields
   ## state field
   state_field <- remDr$findElement(using = "id",
                                    value = "FrmFld12")
-  Sys.sleep(7)
+  Sys.sleep(5)
   state_field$clickElement()
   Sys.sleep(2)
   
@@ -192,7 +293,13 @@ for(i in 1:2){
     sf::st_transform("EPSG:5070") # EPSG 5070 (https://epsg.io/5070)
   
   nexrad_table <- rbind(nexrad_table, table_clean)
+  
+  print(paste("Iteration", i, "of", length(states), "takes", Sys.time() - start2, units(Sys.time() - start2), "to complete creating and adding", states[i], "data to dataframe and export as plot", sep = " "))
 }
 
+# Close RSelenium servers
 remDr$close()
 rD$server$stop()
+
+# Export data
+sf::st_write(obj = nexrad_table, dsn = nexrad_gpkg, layer = "nexrad_sites", append = F)
