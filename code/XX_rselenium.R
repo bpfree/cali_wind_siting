@@ -319,3 +319,9 @@ rD$server$stop()
 
 # Export data
 sf::st_write(obj = nexrad_table, dsn = nexrad_gpkg, layer = "nexrad_sites", append = F)
+
+#####################################
+#####################################
+
+# calculate end time and print time difference
+print(Sys.time() - start) # print how long it takes to calculate
