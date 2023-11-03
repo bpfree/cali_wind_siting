@@ -66,8 +66,8 @@ original_hex_gdb <- "data/a_raw_data/Draft_5_final.gdb"
 
 ### Output directories
 #### Intermediate directories
-study_area_gpkg <- "data/b_intermediate_data/oregon_study_area.gpkg"
-wind_area_gpkg <- "data/b_intermediate_data/oregon_wind_area.gpkg"
+study_area_gpkg <- "data/b_intermediate_data/california_study_area.gpkg"
+wind_area_gpkg <- "data/b_intermediate_data/california_wind_area.gpkg"
 
 #####################################
 #####################################
@@ -85,18 +85,18 @@ region <- "california"
 sf::st_layers(dsn = wind_area_dir,
               do_count = TRUE)
 
-# Inspect available layers and names within original final Oregon study geodatabase
-sf::st_layers(dsn = original_hex_gdb,
-              do_count = TRUE)
+# Inspect available layers and names within original final California study geodatabase
+# sf::st_layers(dsn = original_hex_gdb,
+#               do_count = TRUE)
 
 #####################################
 #####################################
 
 # Load original data
-original_hex_grid <- sf::st_read(dsn = original_hex_gdb, layer = "most_conservative_model") %>%
-  # add field "index" that will be populated with the row_number
-  dplyr::mutate(index = row_number()) %>%
-  dplyr::select(index)
+# original_hex_grid <- sf::st_read(dsn = original_hex_gdb, layer = "most_conservative_model") %>%
+#   # add field "index" that will be populated with the row_number
+#   dplyr::mutate(index = row_number()) %>%
+#   dplyr::select(index)
 
 #####################################
 #####################################
@@ -104,16 +104,16 @@ original_hex_grid <- sf::st_read(dsn = original_hex_gdb, layer = "most_conservat
 # Load call areas
 wind_areas <- sf::st_read(dsn = wind_area_dir,
                           # select the layer for call areas and use to open desired layer (planning area outlines)
-                          ## ***Note: the planning area outlines is the 2nd dataset
+                          ## ***Note: the planning area outlines is the 5th dataset (as of October 19, 2023)
                           ## Using this method will avoid having to update the layer name each time BOEM updates the dataset
                           ## ***Note: If BOEM changes which layers are available it is possible in the future that the planning
-                          ## area outlines will no longer be the 2nd dataset
+                          ## area outlines will no longer be the 5th dataset
                           layer = paste(sf::st_layers(dsn = wind_area_dir,
                                                 # [[1]] --> first component, which is the column "layer_name"
-                                                # [2] --> 2nd element of that list, which is the planning area outlines
-                                                do_count = TRUE)[[1]][2])) %>%
+                                                # [5] --> 5th element of that list, which is the planning area outlines
+                                                do_count = TRUE)[[1]][5])) %>%
   # filter for only Oregon call areas
-  dplyr::filter(grepl(pattern = "california",
+  dplyr::filter(grepl(pattern = "California",
                       x = ADDITIONAL_INFORMATION)) %>%
   # reproject data into a coordinate system (NAD 1983 UTM Zone 10N) that will convert units from degrees to meters
   sf::st_transform("EPSG:26910")
@@ -158,7 +158,7 @@ wind_area_hex <- wind_area_grid[wind_areas, ] %>%
 # Oregon call area hexes as single feature
 ## ***Note: This dataset will be used to extract any data from datasets
 ##          within the model that will impact wind siting suitability
-oregon_call_area_hex_dissolve <- wind_area_hex %>%
+california_call_area_hex_dissolve <- wind_area_hex %>%
   # create field called "call area"
   dplyr::mutate(call_area = "call_area") %>%
   # group all rows by the different elements with "call area" field -- this will create a row for the grouped data
@@ -173,12 +173,12 @@ oregon_call_area_hex_dissolve <- wind_area_hex %>%
 ## Study Area
 sf::st_write(obj = wind_area_grid, dsn = study_area_gpkg, layer = paste(region, "call_area_grid", sep = "_"), append = F)
 sf::st_write(obj = wind_area_hex, dsn = study_area_gpkg, layer = paste(region, "call_area_hex", sep = "_"), append = F)
-sf::st_write(obj = oregon_call_area_hex_dissolve, dsn = study_area_gpkg, layer = paste(region, "call_areas_dissolve", sep = "_"), append = F)
+sf::st_write(obj = california_call_area_hex_dissolve, dsn = study_area_gpkg, layer = paste(region, "call_areas_dissolve", sep = "_"), append = F)
 
 sf::st_write(obj = original_hex_grid, dsn = study_area_gpkg, layer = paste(region, "original_hex_grid", sep = "_"), append = F)
 
 ## Wind Call Areas
-sf::st_write(obj = wind_areas, dsn = wind_area_gpkg, layer = "oregon_wind_call_areas", append = F)
+sf::st_write(obj = wind_areas, dsn = wind_area_gpkg, layer = "california_wind_call_areas", append = F)
 
 #####################################
 #####################################
