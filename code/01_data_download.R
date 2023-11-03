@@ -155,10 +155,10 @@ boem_wind_area_data <- "https://www.boem.gov/BOEM-Renewable-Energy-Geodatabase.z
 
 #####################################
 
-## Oregon state boundary (source: http://navigator.state.or.us/sdl/data/shapefile/k24/or_state_boundary.zip)
-### Metadata: https://spatialdata.oregonexplorer.info/osdl-geoportal/rest/document?id=%7BCF375EB0-FF70-42D9-9DAE-A17A776821A8%7D
-### Geospatial library: https://spatialdata.oregonexplorer.info/geoportal/details;id=cf375eb0ff7042d99daea17a776821a8
-oregon_boundary_data <- "http://navigator.state.or.us/sdl/data/shapefile/k24/or_state_boundary.zip"
+## California state boundary (source: https://data.ca.gov/dataset/e212e397-1277-4df3-8c22-40721b095f33/resource/3db1e426-fb51-44f5-82d5-a54d7c6e188b/download/ca-state-boundary.zip)
+### Metadata: https://data.ca.gov/dataset/ca-geographic-boundaries/resource/3db1e426-fb51-44f5-82d5-a54d7c6e188b
+### State geoportal: https://gis.data.ca.gov/ 
+california_boundary_data <- "https://data.ca.gov/dataset/e212e397-1277-4df3-8c22-40721b095f33/resource/3db1e426-fb51-44f5-82d5-a54d7c6e188b/download/ca-state-boundary.zip"
 
 #####################################
 
@@ -199,10 +199,6 @@ bathymetric_contours_data <- "https://marinecadastre.gov/downloads/data/mc/Bathy
 military_operating_data <- "https://marinecadastre.gov/downloads/data/mc/MilitaryOperatingAreaBoundary.zip"
 
 #####################################
-
-## Pacific Coast Port Access Route Study (source: https://navcen.uscg.gov/sites/default/files/pdf/PARS/PAC_PARS_22/Draft%20PAC-PARS.pdf)
-### Federal Register: https://www.federalregister.gov/documents/2022/08/26/2022-18453/port-access-route-study-the-pacific-coast-from-washington-to-california
-pacpars_data <- "https://navcen.uscg.gov/sites/default/files/pdf/PARS/PAC_PARS_22/Draft%20PAC-PARS.pdf"
 
 #####################################
 
@@ -347,18 +343,15 @@ download_list <- c(
   # bathymetry
   crm_v7_data,
   bathymetric_contours_data,
-  central_oregon_data,
-  port_orford_data,
-  crescent_city_data,
+  #central_oregon_data,
+  #port_orford_data,
+  #crescent_city_data,
 
   # Oregon state boundary
-  oregon_boundary_data,
+  california_boundary_data,
 
   # military operating areas
   military_operating_data,
-
-  # PACPARS
-  pacpars_data,
 
   # submarine cable
   submarine_cable_areas_data,
@@ -464,16 +457,6 @@ file.rename(from = file.path(data_dir,
                                         # search for pattern that matches dataset
                                         pattern = "170514_OSW")),
             to = file.path(data_dir, "nrel_2015_net_value.xlsx"))
-
-## PACPARS report
-file.rename(from = file.path(data_dir,
-                             # find original name
-                             list.files(data_dir,
-                                        # search for pattern that matches dataset
-                                        pattern = "PAC-PARS")),
-            to = file.path(data_dir, "pacpars_draft_report.pdf"))
-
-list.files(data_dir)
 
 #####################################
 #####################################
