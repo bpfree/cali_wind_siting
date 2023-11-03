@@ -181,17 +181,7 @@ for(i in 1:length(states)){
   advanced_search <-remDr$findElement(using = "link text",
                                       value = "Advanced Search")
   advanced_search$clickElement()
-  Sys.sleep(10)
-  # 
-  # 
-  # check_url <- advanced_search$getCurrentUrl()
-  # check_url
-  
-  # source <- remDr$getPageSource()[[1]]
-  
-  # scroll down to see lower fields
-  # scroll <- remDr$findElement("css", "body")
-  # scroll$sendKeysToElement(list(key = "home"))
+  Sys.sleep(5)
   
   #####################################
   
@@ -207,15 +197,13 @@ for(i in 1:length(states)){
                             value = "lstState")
   state$sendKeysToElement(list(states[i],
                                key = "enter"))
-  Sys.sleep(8)
-  
-  
+  Sys.sleep(5)
   
   # Select pertinent data fields
   ## state field
   state_field <- remDr$findElement(using = "id",
                                    value = "FrmFld12")
-  Sys.sleep(5)
+  Sys.sleep(3)
   state_field$clickElement()
   Sys.sleep(2)
   
@@ -313,9 +301,15 @@ for(i in 1:length(states)){
   print(paste("Iteration", i, "of", length(states), "takes", Sys.time() - start2, units(Sys.time() - start2), "to complete creating and adding", states[i], "data to dataframe and export as plot", sep = " "))
 }
 
+#####################################
+#####################################
+
 # Close RSelenium servers
 remDr$close()
 rD$server$stop()
+
+#####################################
+#####################################
 
 # Export data
 sf::st_write(obj = nexrad_table, dsn = nexrad_gpkg, layer = "nexrad_sites", append = F)
