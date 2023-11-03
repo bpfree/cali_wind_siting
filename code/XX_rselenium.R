@@ -1,6 +1,6 @@
-########################
-### 1. Download Data ###
-########################
+###################################
+### 3. Webscrape Data -- NEXRAD ###
+###################################
 
 # Clear environment
 rm(list = ls())
@@ -138,7 +138,7 @@ rD <- RSelenium::rsDriver(browser="firefox",
 remDr <- rD[["client"]]
 remDr$open(silent = TRUE)
 
-## Set client (to be used in the )
+## Set client (to be used in the zoom function)
 client <- rD$client
 
 #####################################
