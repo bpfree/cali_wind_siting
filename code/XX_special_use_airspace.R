@@ -1,5 +1,5 @@
 ##################################################
-### 3. Webscrape Data -- Special Use Airspace  ###
+### 1. Webscrape Data -- Special Use Airspace  ###
 ##################################################
 
 # Clear environment
@@ -92,7 +92,7 @@ remDr$open(silent = TRUE)
 #####################################
 #####################################
 
-# Loop that navigates to NEXRAD page (source: https://www.roc.noaa.gov/WSR88D/Program/SiteID.aspx)
+# Loop that navigates to Special Use Airspace (source: https://adds-faa.opendata.arcgis.com/datasets/special-use-airspace/explore)
 # and scrapes the site data for the states and regions of interest
   
 # Base URL
@@ -110,7 +110,7 @@ Sys.sleep(2)
 
 #####################################
 
-# Click "Advanced Search" to search by state
+# Click "Download" toggle on side panel
 download_toggle <-remDr$findElement(using = "css selector",
                                     value = ".hub-toolbar-inner > button:nth-child(3)")
 download_toggle$clickElement()
